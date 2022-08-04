@@ -1,3 +1,34 @@
+import com.baonq.iapexample.R
+
+Skip to content
+Search or jump to…
+Pull requests
+Issues
+Marketplace
+Explore
+
+@baonq-2356
+baonq-2356
+/
+iap_example
+Public
+Code
+Issues
+Pull requests
+Actions
+Projects
+Wiki
+Security
+Insights
+Settings
+iap_example/IapExample/app/src/main/java/com/baonq/iapexample/MainActivity.kt
+@baonq-2356
+baonq-2356 init
+Latest commit 1c176fd 15 hours ago
+History
+1 contributor
+92 lines (77 sloc)  3.07 KB
+
 package com.baonq.iapexample
 
 import android.icu.text.AlphabeticIndex
@@ -14,10 +45,11 @@ class MainActivity : AppCompatActivity() {
                 // To be implemented in a later section
             }
 
-    private var billingClient = BillingClient.newBuilder(this)
-        .setListener(purchaseUpdatedListener)
-        .enablePendingPurchases()
-        .build()
+    private var billingClient =
+            BillingClient.newBuilder(this)
+                .setListener(purchaseUpdatedListener)
+                .enablePendingPurchases()
+                .build()
 
     val queryProductDetailsParams =
             QueryProductDetailsParams.newBuilder()
@@ -28,8 +60,7 @@ class MainActivity : AppCompatActivity() {
                             .setProductType(BillingClient.ProductType.SUBS)
                             .build()
                     )
-                )
-                .build()
+                ).build()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -60,8 +91,8 @@ class MainActivity : AppCompatActivity() {
 
     private fun queryProducts() {
         billingClient.queryProductDetailsAsync(queryProductDetailsParams) {
-            billingResult,
-            productDetailsList ->
+                billingResult,
+                productDetailsList ->
             // check billingResult
             // process returned productDetailsList
         }
@@ -72,15 +103,15 @@ class MainActivity : AppCompatActivity() {
         productList.add("product_id_example")
 
         val params =
-                QueryProductDetailsParams.newBuilder()
-                    .setProductList(
-                        listOf(
-                            QueryProductDetailsParams.Product.newBuilder()
-                                .setProductId("product_id_example")
-                                .setProductType(BillingClient.ProductType.SUBS)
-                                .build()
-                        )
-                    ).setType(BillingClient.ProductType.SUBS)
+            QueryProductDetailsParams.newBuilder()
+                .setProductList(
+                    listOf(
+                        QueryProductDetailsParams.Product.newBuilder()
+                            .setProductId("product_id_example")
+                            .setProductType(BillingClient.ProductType.SUBS)
+                            .build()
+                    )
+                ).setType(BillingClient.ProductType.SUBS)
 
         // leverage queryProductDetails Kotlin extension function
         val productDetailsResult = withContext(Dispatchers.IO) {
