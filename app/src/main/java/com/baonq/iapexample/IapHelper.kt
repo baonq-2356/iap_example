@@ -13,8 +13,9 @@ class IapHelper(context: Context) : PurchasesUpdatedListener, ProductDetailsResp
                 .setListener(this)
                 .build()
 
-    private val purchase = mutableListOf<Purchase>()
+    private val purchases = mutableListOf<Purchase>()
     private var productWithProductDetails = mapOf<String, ProductDetails>()
+    private var isNewPurchaseAcknowledged = false
 
     /**
      * Establish connection to GooglePLay
@@ -79,7 +80,7 @@ class IapHelper(context: Context) : PurchasesUpdatedListener, ProductDetailsResp
             QueryPurchasesParams.newBuilder().setProductType(BillingClient.ProductType.SUBS).build()
         ) { billingResult, purchaseList ->
             if (billingResult.responseCode == BillingClient.BillingResponseCode.OK) {
-                purchase.apply {
+                purchases.apply {
                     clear()
                     addAll(purchaseList.ifEmpty { emptyList() })
                 }
@@ -96,8 +97,52 @@ class IapHelper(context: Context) : PurchasesUpdatedListener, ProductDetailsResp
         billingClient.launchBillingFlow(activity, params)
     }
 
-    override fun onPurchasesUpdated(p0: BillingResult, p1: MutableList<Purchase>?) {
-        TODO("Not yet implemented")
+    override fun onPurchasesUpdated(
+        billingResult: BillingResult,
+        purchases: MutableList<Purchase>?
+    ) {
+        if (billingResult.responseCode == BillingClient.BillingResponseCode.OK
+            && !purchases.isNullOrEmpty()
+        ) {
+            // Post new purchase list to purchase
+            this.purchases.apply {
+                clear()
+                addAll(purchases)
+            }
+
+            // Then, handle the purchases
+            for (purchase in purchases) {
+                acknowledgePurchases(purchase)
+            }
+        } else if (billingResult.responseCode == BillingClient.BillingResponseCode.USER_CANCELED) {
+            // Handle an error caused by a user cancelling the purchase flow.
+            Log.d(TAG, "User has cancelled")
+        } else {
+            // Handle any other error codes.
+        }
+    }
+
+    private fun acknowledgePurchases(purchase: Purchase?) {
+        purchase?.let { purchaseItem ->
+            if (purchaseItem.isAcknowledged) {
+                val params =
+                        AcknowledgePurchaseParams.newBuilder()
+                            .setPurchaseToken(purchaseItem.purchaseToken)
+                            .build()
+                billingClient.acknowledgePurchase(params) { billingResult ->
+                    if (billingResult.responseCode == BillingClient.BillingResponseCode.OK &&
+                        purchaseItem.purchaseState == Purchase.PurchaseState.PURCHASED
+                    ) {
+                        isNewPurchaseAcknowledged = true
+                    }
+                }
+            }
+        }
+    }
+
+    fun terminateBillingConnection() {
+        Log.d(TAG, "Terminating connection")
+        billingClient.endConnection()
     }
 
     override fun onProductDetailsResponse(
